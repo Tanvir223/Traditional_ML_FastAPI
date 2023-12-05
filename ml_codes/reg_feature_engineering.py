@@ -5,16 +5,16 @@ from helper.mongodb_helper_functions import *
 
 def reg_feature_engineering(df, selected_features, target_column, select_ml_algo):
 
-    cleaned_df = df[selected_features].copy()
+    cleaned_df = df.copy()
     cleaned_df = cleaned_df.dropna()
-    # target_column = 'price'
-    # select_ml_algo = ['LR', 'XGB', 'RF']
+
     #-------------------------------
     feature_columns =  cleaned_df.drop(columns= [target_column]).columns
+    feature_columns = list(set(feature_columns).intersection(set(selected_features)))
 
     X = cleaned_df[feature_columns]
     y = cleaned_df[target_column]
-
+     
     # extract numeric and categorical type column name
     date_col, x_df = find_date_col(X)
     # Identify categorical columns
@@ -54,6 +54,7 @@ def reg_feature_engineering(df, selected_features, target_column, select_ml_algo
     ml_models_obj = RegressionModels()
 
     for ml_algo in select_ml_algo:
+        print("-------ml_algo------------",ml_algo)
         algo_run_function = "model_"+ ml_algo
         extract_function = getattr(ml_models_obj, algo_run_function)
         # print(extract_function())
@@ -65,5 +66,5 @@ def reg_feature_engineering(df, selected_features, target_column, select_ml_algo
     validation_result_df['guid'] = df['guid'][0]
     variable_importance_df['guid'] = df['guid'][0]
     save_data(validation_result_df, 'evalution_colections')
-    save_data(variable_importance_df, 'evalution_colections')
-    return validation_result_df, variable_importance_df
+    save_data(variable_importance_df, 'variable_imp_colections')
+    # return validation_result_df, variable_importance_df

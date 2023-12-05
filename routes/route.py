@@ -6,6 +6,8 @@ import uuid
 from helper.mongodb_helper_functions import *
 from ml_codes.reg_feature_engineering import *
 import json
+from typing import List
+
 router = APIRouter()
 
 @router.post("/upload_data")
@@ -36,12 +38,12 @@ async def delete_data(guid:str):
 
 
 @router.post("/feature_engineering")
-async def feature_engineering(guid: str, request, backgroundtask: BackgroundTasks):
+async def feature_engineering(guid: str, selected_feature: List[str], target_column: str, ml_algos : List[str], backgroundtask: BackgroundTasks):
     
     data = raw_data_collection.find({"guid":guid})
     if data:
         df = pd.DataFrame(data)
         print(df.head())
-        # reg_feature_engineering(df, selected_feature, target_column, ml_algos)
+        backgroundtask.add_task(reg_feature_engineering, df, selected_feature, target_column, ml_algos)
     return {"message" : f"feature Engineering process accepted, finda the validationa and variable importance \
             data using the guid {guid} at collection : evalution_colections"}
