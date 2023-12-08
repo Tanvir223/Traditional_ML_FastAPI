@@ -1,10 +1,9 @@
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from env.mongo_credintials import url
 
-uri = "mongodb+srv://tanvircmed:#include<stdio.h>Haramzada1@traditionalmlcluster.eotubcy.mongodb.net/?retryWrites=true&w=majority"
-
-client = MongoClient(uri)
+client = MongoClient(url)
 
 db = client.raw_db
 

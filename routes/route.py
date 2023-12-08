@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 import uuid
 from helper.mongodb_helper_functions import *
 from ml_codes.reg_feature_engineering import *
+from ml_codes.reg_finalization import *
 import json
 from typing import List
 
@@ -47,3 +48,18 @@ async def feature_engineering(guid: str, selected_feature: List[str], target_col
         backgroundtask.add_task(reg_feature_engineering, df, selected_feature, target_column, ml_algos)
     return {"message" : f"feature Engineering process accepted, finda the validationa and variable importance \
             data using the guid {guid} at collection : evalution_colections"}
+
+
+@router.post("/finalize_model")
+async def finalizing_model(guid: str, selected_feature: List[str], target_column: str, ml_algos : List[str], backgroundtask: BackgroundTasks):
+    
+    data_dict = raw_data_collection.find({"guid":guid})
+    validation_result_dict = evalution_colections.find({"guid":guid})
+    if data_dict:
+        df = pd.DataFrame(data_dict)
+        df.drop(columns=['_id', 'guid'], inplace=True)
+        validation_result_df = pd.DataFrame(validation_result_dict)
+        validation_result_df.drop(columns=['_id', 'guid'], inplace=True)
+        print(df.head())
+        finalize_model(df, ml_algos, selected_feature, target_column, validation_result_df)
+    return {"message" : f"Finalizing the model , use now you can predict with the predict API"}
