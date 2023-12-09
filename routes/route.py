@@ -6,6 +6,7 @@ import uuid
 from helper.mongodb_helper_functions import *
 from ml_codes.reg_feature_engineering import *
 from ml_codes.reg_finalization import *
+from ml_codes.reg_prediction import *
 import json
 from typing import List
 
@@ -61,5 +62,16 @@ async def finalizing_model(guid: str, selected_feature: List[str], target_column
         validation_result_df = pd.DataFrame(validation_result_dict)
         validation_result_df.drop(columns=['_id', 'guid'], inplace=True)
         print(df.head())
-        finalize_model(df, ml_algos, selected_feature, target_column, validation_result_df)
+        backgroundtask.add_task(finalize_model, df, ml_algos, selected_feature, target_column, validation_result_df)
     return {"message" : f"Finalizing the model , use now you can predict with the predict API"}
+
+@router.post("/prediction")
+async def prediction(file: UploadFile, selected_finalized_feature: List[str], trained_ml_algos : List[str], backgroundtask: BackgroundTasks):
+    
+    df_dict = pd.read_csv(file.file)
+    
+    if df:
+        df = pd.DataFrame(df_dict)
+
+        backgroundtask.add_task(predict, df, selected_finalized_feature, trained_ml_algos)
+    return {"message" : f"prediction is runing"}

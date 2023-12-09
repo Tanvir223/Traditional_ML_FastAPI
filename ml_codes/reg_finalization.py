@@ -61,8 +61,6 @@ def finalize_model(final_df, select_ml_algo, select_final_variables, target_col,
     full_predicted_df = pd.concat([predicted_train_df, predicted_test_df])
     full_predicted_df = label_decoder(full_predicted_df, categorical_cols=categorical_columns)
 
-    full_predicted_df.to_csv("predicted_data/predicted_train_test.csv",index=False)
-
     
     save_data(full_predicted_df, 'predicted_train_collections')
 

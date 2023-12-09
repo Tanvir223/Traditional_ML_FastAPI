@@ -46,7 +46,6 @@ def loaded_label_encoder(encoded_df, categorical_cols):
 
   return encoded_df
 
-# -------------------------------------------------------------
 
 #-------------------------Scaling -----------------------------
 def scaling_encoder(df, numeric_cols):

@@ -1,7 +1,9 @@
 from pymongo import MongoClient
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from env.mongo_credintials import url
+from env.mongo_credintials import *
+
+url = "mongodb+srv://" + user_name + ":" + password + "@traditionalmlcluster.eotubcy.mongodb.net/?retryWrites=true&w=majority"
 
 client = MongoClient(url)
 
