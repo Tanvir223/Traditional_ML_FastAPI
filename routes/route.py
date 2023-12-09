@@ -9,6 +9,7 @@ from ml_codes.reg_finalization import *
 from ml_codes.reg_prediction import *
 import json
 from typing import List
+from base_models.base_model import *
 
 router = APIRouter()
 
@@ -29,8 +30,8 @@ async def get_data_api(guid : str, collection_name: str):
         raise HTTPException(status_code=404, detail="Data not Found")
     return JSONResponse(data_dict)
 
-@router.delete("/delete_data/{guid}")
-async def delete_data(guid:str):
+@router.delete("/delete_data/{guid}/{collection_name}")
+async def delete_data(guid : str, collection_name: str):
     data = raw_data_collection.delete_many({'guid':guid})
 
     if data.deleted_count == 0:
@@ -40,38 +41,37 @@ async def delete_data(guid:str):
 
 
 @router.post("/feature_engineering")
-async def feature_engineering(guid: str, selected_feature: List[str], target_column: str, ml_algos : List[str], backgroundtask: BackgroundTasks):
+async def feature_engineering(feature_engineering_params: Feature_Engineering_Params, backgroundtask: BackgroundTasks):
     
-    data = raw_data_collection.find({"guid":guid})
+    data = raw_data_collection.find({"guid":feature_engineering_params['guid']})
     if data:
         df = pd.DataFrame(data)
         print(df.head())
-        backgroundtask.add_task(reg_feature_engineering, df, selected_feature, target_column, ml_algos)
+        backgroundtask.add_task(reg_feature_engineering, df, feature_engineering_params['selected_feature'], feature_engineering_params['target_column'], feature_engineering_params['ml_algos'])
     return {"message" : f"feature Engineering process accepted, finda the validationa and variable importance \
-            data using the guid {guid} at collection : evalution_colections"}
+            data using the guid {feature_engineering_params['guid']} at collection : evalution_colections"}
 
 
 @router.post("/finalize_model")
-async def finalizing_model(guid: str, selected_feature: List[str], target_column: str, ml_algos : List[str], backgroundtask: BackgroundTasks):
+async def finalizing_model(finaize_params : Finalize_Params, backgroundtask: BackgroundTasks):
     
-    data_dict = raw_data_collection.find({"guid":guid})
-    validation_result_dict = evalution_colections.find({"guid":guid})
+    data_dict = raw_data_collection.find({"guid":finaize_params['guid']})
+    validation_result_dict = evalution_colections.find({"guid":finaize_params['guid']})
     if data_dict:
         df = pd.DataFrame(data_dict)
         df.drop(columns=['_id', 'guid'], inplace=True)
         validation_result_df = pd.DataFrame(validation_result_dict)
         validation_result_df.drop(columns=['_id', 'guid'], inplace=True)
         print(df.head())
-        backgroundtask.add_task(finalize_model, df, ml_algos, selected_feature, target_column, validation_result_df)
+        backgroundtask.add_task(finalize_model, df, finaize_params['ml_algos'], finaize_params['selected_feature'], finaize_params['target_column'], validation_result_df)
     return {"message" : f"Finalizing the model , use now you can predict with the predict API"}
 
 @router.post("/prediction")
-async def prediction(file: UploadFile, selected_finalized_feature: List[str], trained_ml_algos : List[str], backgroundtask: BackgroundTasks):
+async def prediction(file: UploadFile, prediction_params : Prediction_Params, backgroundtask: BackgroundTasks):
     
     df_dict = pd.read_csv(file.file)
     
     if df:
         df = pd.DataFrame(df_dict)
-
-        backgroundtask.add_task(predict, df, selected_finalized_feature, trained_ml_algos)
+        backgroundtask.add_task(predict, df, prediction_params['selected_finalized_feature'], prediction_params['trained_ml_algos'])
     return {"message" : f"prediction is runing"}
